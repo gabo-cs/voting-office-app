@@ -8,6 +8,46 @@ defmodule Election do
     next_id: 3
   )
 
+  def update(election, command) when is_binary(command) do
+    update(election, String.split(command))
+  end
+
+  # TODO: Refactor this function
+  def update(election, ["v" <> _ | args]) do
+    candidate_id =
+      args
+      |> Enum.join(" ")
+      |> Integer.parse()
+      |> elem(0)
+
+    candidates =
+      Enum.map(election.candidates, fn candidate ->
+        if candidate.id == candidate_id do
+          %{candidate | votes: candidate.votes + 1}
+        else
+          candidate
+        end
+      end)
+
+    %{election | candidates: candidates}
+  end
+
+  def update(election, ["a" <> _ | args]) do
+    name = Enum.join(args, " ")
+    candidate = Candidate.new(election.next_id, name)
+
+    %{
+      election
+      | next_id: election.next_id + 1,
+        candidates: [candidate | election.candidates]
+    }
+  end
+
+  def update(election, ["n" <> _ | args]) do
+    name = Enum.join(args, " ")
+    %{election | name: name}
+  end
+
   def view(election) do
     [
       view_header(election),
