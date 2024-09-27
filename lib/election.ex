@@ -12,24 +12,8 @@ defmodule Election do
     update(election, String.split(command))
   end
 
-  # TODO: Refactor this function
-  def update(election, ["v" <> _ | args]) do
-    candidate_id =
-      args
-      |> Enum.join(" ")
-      |> Integer.parse()
-      |> elem(0)
-
-    candidates =
-      Enum.map(election.candidates, fn candidate ->
-        if candidate.id == candidate_id do
-          %{candidate | votes: candidate.votes + 1}
-        else
-          candidate
-        end
-      end)
-
-    %{election | candidates: candidates}
+  def update(election, ["v" <> _, candidate_id]) do
+    vote(election, Integer.parse(candidate_id))
   end
 
   def update(election, ["a" <> _ | args]) do
@@ -74,6 +58,23 @@ defmodule Election do
       "\n",
       "commands: (n)ame <election>, (a)dd candidate, (v)ote id, (q)uit\n"
     ]
+  end
+
+  defp vote(election, {candidate_id, ""}) do
+    candidates = Enum.map(election.candidates, &maybe_increment_vote(&1, candidate_id))
+    %{election | candidates: candidates}
+  end
+
+  defp vote(election, _errors), do: election
+
+  defp maybe_increment_vote(candidate, id) when is_integer(id) do
+    maybe_increment_vote(candidate, candidate.id == id)
+  end
+
+  defp maybe_increment_vote(candidate, false), do: candidate
+
+  defp maybe_increment_vote(candidate, true) do
+    %{candidate | votes: candidate.votes + 1}
   end
 
   defp sort_candidates_by_votes_desc(candidates) do
