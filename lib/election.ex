@@ -8,9 +8,26 @@ defmodule Election do
     next_id: 3
   )
 
+  def run, do: run(%Election{})
+  def run(:quit), do: :quit
+
+  def run(election = %Election{}) do
+    IO.write([IO.ANSI.clear(), IO.ANSI.cursor(0, 0)])
+
+    election
+    |> view()
+    |> IO.write()
+
+    election
+    |> update(IO.gets("> "))
+    |> run()
+  end
+
   def update(election, command) when is_binary(command) do
     update(election, String.split(command))
   end
+
+  def update(_election, ["q" <> _]), do: :quit
 
   def update(election, ["v" <> _, candidate_id]) do
     vote(election, Integer.parse(candidate_id))
